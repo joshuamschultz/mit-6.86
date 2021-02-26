@@ -43,7 +43,7 @@ def hinge_loss_single(feature_vector, label, theta, theta_0):
     else:
         return 1-z 
     
-    raise NotImplementedError
+   
 
 
 def hinge_loss_full(feature_matrix, labels, theta, theta_0):
@@ -75,7 +75,7 @@ def hinge_loss_full(feature_matrix, labels, theta, theta_0):
     
     return summed_hinge_loss / len(feature_matrix)
 
-    raise NotImplementedError
+  
 
 
 def perceptron_single_step_update(
@@ -100,8 +100,18 @@ def perceptron_single_step_update(
     real valued number with the value of theta_0 after the current updated has
     completed.
     """
-    # Your code here
-    raise NotImplementedError
+    
+    y_hat = np.dot(current_theta,feature_vector) + current_theta_0
+    y_hat = np.sign(y_hat)
+
+    error = label * y_hat 
+
+    if error <= 0:
+        theta = current_theta + np.dot(label,feature_vector)
+        theta_0 = current_theta_0 + label 
+        return theta, theta_0
+    else:
+        return current_theta, current_theta_0
 
 
 def perceptron(feature_matrix, labels, T):
@@ -129,12 +139,14 @@ def perceptron(feature_matrix, labels, T):
     theta_0, the offset classification parameter, after T iterations through
     the feature matrix.
     """
-    # Your code here
+    theta = np.zeros(np.shape(feature_matrix)[1])
+    theta_0 = 0
+    
     for t in range(T):
         for i in get_order(feature_matrix.shape[0]):
-            # Your code here
-            pass
-    raise NotImplementedError
+            theta, theta_0 = perceptron_single_step_update(feature_matrix[i],labels[i], theta, theta_0)
+    return theta, theta_0
+ 
 
 
 def average_perceptron(feature_matrix, labels, T):
@@ -166,9 +178,18 @@ def average_perceptron(feature_matrix, labels, T):
     Hint: It is difficult to keep a running average; however, it is simple to
     find a sum and divide.
     """
-    # Your code here
-    raise NotImplementedError
-
+    
+    theta = np.zeros(np.shape(feature_matrix)[1])
+    theta_0 = 0
+    summed_theta = 0
+    summed_theta_0 = 0
+    
+    for t in range(T):
+        for i in get_order(feature_matrix.shape[0]):
+            theta, theta_0 = perceptron_single_step_update(feature_matrix[i],labels[i], theta, theta_0)
+            summed_theta += theta
+            summed_theta_0 += theta_0
+    return summed_theta/(T*feature_matrix.shape[0]),summed_theta_0/(T*feature_matrix.shape[0])
 
 def pegasos_single_step_update(
         feature_vector,
