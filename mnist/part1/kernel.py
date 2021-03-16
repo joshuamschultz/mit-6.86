@@ -19,8 +19,7 @@ def polynomial_kernel(X, Y, c, p):
         Returns:
             kernel_matrix - (n, m) Numpy array containing the kernel matrix
     """
-    # YOUR CODE HERE
-    raise NotImplementedError
+    kernel_matrix = (X.dot(Y.T) + c)**p
 
 
 
@@ -38,5 +37,14 @@ def rbf_kernel(X, Y, gamma):
         Returns:
             kernel_matrix - (n, m) Numpy array containing the kernel matrix
     """
-    # YOUR CODE HERE
-    raise NotImplementedError
+    n, d = X.shape
+    m = Y.shape[0]
+    
+    kernel_matrix = np.zeros((n,m))
+    
+    for i in range(n):
+        d = X[i,:] - Y  # Using numpy broadcasting to get differences
+        b = np.sum(d**2, axis=1)
+        kernel_matrix[i,:] = np.exp(-gamma*b)
+
+    return kernel_matrix

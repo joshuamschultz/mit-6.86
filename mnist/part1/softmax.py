@@ -31,8 +31,15 @@ def compute_probabilities(X, theta, temp_parameter):
     Returns:
         H - (k, n) NumPy array, where each entry H[j][i] is the probability that X[i] is labeled as j
     """
-    #YOUR CODE HERE
-    raise NotImplementedError
+    expo = theta.dot(X.T) / temp_parameter
+
+    c = np.max(expo, axis=0)
+
+    H = np.exp(expo - c)
+
+    probabilities = H/ np.sum(H, axis=0)
+
+    return probabilities
 
 def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
     """
@@ -50,8 +57,28 @@ def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
     Returns
         c - the cost value (scalar)
     """
-    #YOUR CODE HERE
-    raise NotImplementedError
+    # Get number of labels
+    k = theta.shape[0]
+    
+    # Get number of examples
+    n = X.shape[0]
+    
+    # Clip prob matrix (remove NaN)
+    clip_prob_matrix = np.clip(compute_probabilities(X, theta, temp_parameter), 1e-15, 1-1e-15)
+    
+    # Log of the matrix of probabilities
+    log_clip_matrix = np.log(clip_prob_matrix)
+    
+    # Sparse matrix of [[y(i) == j]]
+    M = sparse.coo_matrix(([1]*n, (Y, range(n))), shape = (k,n)).toarray()
+    
+    # Only add terms of log(matrix of prob) where M == 1
+    error_term = (-1/n)*np.sum(log_clip_matrix[M == 1])    
+                
+    # Add regularization
+    reg_term = (lambda_factor/2)*np.linalg.norm(theta)**2
+    
+    return error_term + reg_term
 
 def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_parameter):
     """
@@ -70,8 +97,24 @@ def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_param
     Returns:
         theta - (k, d) NumPy array that is the final value of parameters theta
     """
-    #YOUR CODE HERE
-    raise NotImplementedError
+    # Label Count
+    k = theta.shape[0]
+    
+    # N examples
+    n = X.shape[0]
+    
+    # Create spare matrix of [[y(i) == j]]
+    M = sparse.coo_matrix(([1]*n, (Y, range(n))), shape=(k,n)).toarray()
+    
+    P = compute_probabilities(X, theta, temp_parameter)
+    
+    # Gradient of theta matrix
+    grad_theta = (-1/(temp_parameter*n))*((M - P) @ X) + lambda_factor*theta
+    
+    # update algo
+    theta = theta - alpha*grad_theta
+    
+    return theta
 
 def update_y(train_y, test_y):
     """
@@ -90,8 +133,10 @@ def update_y(train_y, test_y):
         test_y_mod3 - (n, ) NumPy array containing the new labels (a number between 0-2)
                     for each datapoint in the test set
     """
-    #YOUR CODE HERE
-    raise NotImplementedError
+    train_y_mod3 = np.mod(train_y, 3)
+    test_y_mod3 = np.mod(test_y, 3)
+
+    return (train_y_mod3, test_y_mod3)
 
 def compute_test_error_mod3(X, Y, theta, temp_parameter):
     """
@@ -108,8 +153,9 @@ def compute_test_error_mod3(X, Y, theta, temp_parameter):
     Returns:
         test_error - the error rate of the classifier (scalar)
     """
-    #YOUR CODE HERE
-    raise NotImplementedError
+    y_pred = get_classification(X, theta, temp_parameter)
+    
+    return 1 - (np.mod(y_pred, 3) == Y).mean()
 
 def softmax_regression(X, Y, temp_parameter, alpha, lambda_factor, k, num_iterations):
     """
